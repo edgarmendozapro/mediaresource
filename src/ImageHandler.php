@@ -15,9 +15,9 @@ class ImageHandler implements Handler
     private $configCompress;
     private $configFormat;
 
-    public function process(string $path, string $configKey): MediaResource
+    public function process(string $path, array $config): MediaResource
     {
-        $this->readConfig($configKey);
+        $this->readConfig($config);
 
         $fileName = FileNameGenerator::withoutFormat();
         $mainImage = $this->createInterventionImage(
@@ -62,9 +62,8 @@ class ImageHandler implements Handler
         return $mediaResource;
     }
 
-    private function readConfig(string $configKey): void
+    private function readConfig(array $config): void
     {
-        $config = config("media_resources.{$configKey}");
         $this->configSize = $config['size'];
         $this->configThumbnails = $config['thumbnails'];
         $this->configCompress = $config['compress'];

@@ -4,7 +4,7 @@ namespace EdgarMendozaTech\MediaResource;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use EdgarMendozaTech\MediaResource\Exception;
+use EdgarMendozaTech\MediaResource\Exception\UnsupportedExtensionException;
 
 class MediaResourceServiceDefaultImpl implements MediaResourceService
 {
@@ -12,33 +12,34 @@ class MediaResourceServiceDefaultImpl implements MediaResourceService
 
     public function fromFile(
         UploadedFile $file,
-        string $configKey
+        array $config
     ): MediaResource {
-        $this->handler = $this->getHandlerImplementation($file->clientExtension());
+        $this->handler = $this->getHandlerImplementationFromExtension($file->clientExtension());
 
         $pathTmpFile = $file->store('/');
 
         $filePath = storage_path("app/public/{$pathTmpFile}");
 
-        $mediaResource = $this->handler->process($filePath, $configKey);
+        $mediaResource = $this->handler->process($filePath, $config);
 
         Storage::delete($pathTmpFile);
 
         return $mediaResource;
     }
 
-    public function fromURL(string $url, string $configKey): MediaResource
+    public function fromURL(string $url, array $config): MediaResource
     {
         // TODO: Extract file extension from url.
         // Hardcoded to jpg for now.
-        $this->handler = $this->getHandlerImplementation('jpg');
-        return $this->handler->process($url, $configKey);
+        $this->handler = $this->getHandlerImplementationFromExtension('jpg');
+        return $this->handler->process($url, $config);
     }
 
     private function getHandlerImplementationFromExtension(string $ext): Handler
     {
         switch (strtolower($ext)) {
             case "jpg":
+            case "jpeg":
             case "png":
                 return new ImageHandler();
             case "mp4":

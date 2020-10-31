@@ -8,7 +8,7 @@ use JamesHeinrich\GetID3;
 
 class VideoHandler implements Handler
 {
-    public function process(string $path, string $configKey): MediaResource
+    public function process(string $path, array $config): MediaResource
     {
         $parts = explode('.', $path);
         if(count($parts) === 0) {
