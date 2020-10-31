@@ -24,19 +24,6 @@ class MediaResource extends Model
         'mediaResources',
     ];
 
-    protected $hidden = [
-        'file_name',
-        'file_size',
-        'file_extension',
-        'alias',
-        'duration',
-        'is_compressed',
-        'created_at',
-        'media_resource_id',
-        'id',
-        'pivot',
-    ];
-
     public $timestamps = false;
 
     public function mediaResource()
