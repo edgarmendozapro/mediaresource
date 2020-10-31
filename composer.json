@@ -1,0 +1,13 @@
+{
+    "name": "edgarmendozatech/mediaresources",
+    "description": "Handle media resources",
+    "type": "library",
+    "authors": [
+        {
+            "name": "Edgar Mendoza",
+            "email": "edgar16nm@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {}
+}
