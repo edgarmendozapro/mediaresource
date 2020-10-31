@@ -36,7 +36,7 @@ class ImageHandler implements Handler
         $this->compress($mediaResource);
 
         $mainMediaResourcePath = Storage::path(
-            "{$mediaResource->file_name}.{$mediaResource->extension}"
+            "{$mediaResource->file_name}.{$mediaResource->file_extension}"
         );
         foreach ($this->configThumbnails as $configThumbnail) {
             $thumbnailImage = $this->createInterventionImage(
@@ -93,6 +93,7 @@ class ImageHandler implements Handler
         return $image->encode($this->configFormat, 100);
     }
 
+    // TODO: Add support for maxWidth and maxHeight
     private function resizeImage(Image $image, ?int $width, ?int $height): Image
     {
         if ($width != null && $height != null) {
@@ -123,8 +124,8 @@ class ImageHandler implements Handler
             'file_name' => $fileName,
             'file_type' => 'image',
             'file_size' => $size,
+            'file_extension' => $this->configFormat,
             'url' => $url,
-            'extension' => $this->configFormat,
             'width' => $image->width(),
             'height' => $image->height(),
             'alias' => $alias,

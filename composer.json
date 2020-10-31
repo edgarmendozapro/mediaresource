@@ -1,7 +1,8 @@
 {
-    "name": "edgarmendozatech/mediaresources",
-    "description": "Handle media resources",
+    "name": "edgarmendozatech/mediaresource",
     "type": "library",
+    "description": "Handle media resources",
+    "keywords": ["upload", "image", "video", "thumbnail"],
     "authors": [
         {
             "name": "Edgar Mendoza",
@@ -9,5 +10,24 @@
         }
     ],
     "minimum-stability": "dev",
-    "require": {}
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "suggest": {
+        "tinify/tinify": "Tinify is required to compress images using tinyPNG.",
+        "james-heinrich/getid3": "GetID3 is required when handling videos",
+        "intervention/image": "Image is required when handling images"
+    },
+    "autoload": {
+        "psr-4": {
+            "EdgarMendozaTech\\MediaResource\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "EdgarMendozaTech\\MediaResource\\MediaResourceServiceProvider"
+            ]
+        }
+    }
 }

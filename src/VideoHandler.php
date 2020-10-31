@@ -4,143 +4,42 @@ namespace EdgarMendozaTech\MediaResource;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
-use Intervention\Image\ImageManagerStatic;
-use Intervention\Image\Image;
-use Intervention\Image\Exception\NotReadableException;
+use JamesHeinrich\GetID3;
 
 class VideoHandler implements Handler
 {
-    private $configSize;
-    private $configThumbnails;
-    private $configCompress;
-    private $configFormat;
-
     public function process(string $path, string $configKey): MediaResource
     {
-        $this->readConfig($configKey);
+        $parts = explode('.', $path);
+        if(count($parts) === 0) {
+            throw new UnsupportedExtensionException(
+                "Unknown file extension"
+            );
+        }
 
+        $fileExtension = $parts[count($parts)-1];
         $fileName = FileNameGenerator::withoutFormat();
-        $mainImage = $this->createInterventionImage(
-            $path,
-            $this->configSize['width'],
-            $this->configSize['height']
-        );
+        $newPath = "{$fileName}.{$fileExtension}";
 
-        $this->save($fileName, $mainImage);
-        $mediaResource = $this->createMediaResource(
-            $fileName,
-            $mainImage,
-            null
-        );
-        $mediaResource->save();
-        $this->compress($mediaResource);
+        Storage::move($path, $newPath);
 
-        $mainMediaResourcePath = Storage::path(
-            "{$mediaResource->file_name}.{$mediaResource->extension}"
-        );
-        foreach ($this->configThumbnails as $configThumbnail) {
-            $thumbnailImage = $this->createInterventionImage(
-                $mainMediaResourcePath,
-                $configThumbnail['width'],
-                $configThumbnail['height']
-            );
+        $getID3 = new GetID3;
+        $video = $getID3->analyze($newPath);
+        $duration = date('H:i:s.v', $video['playtime_seconds']);
+        $width = $video['video']['resolution_x'];
+        $height = $video['video']['resolution_y'];
+        $fileSize = $video['filesize'];
 
-            $thumbnailFileName = "{$fileName}_{$configThumbnail['suffix']}";
-            $this->save($thumbnailFileName, $thumbnailImage);
+        $url = Storage::url("{$fileName}.{$fileExtension}");
 
-            $thumbnailMediaResource = $this->createMediaResource(
-                $thumbnailFileName,
-                $thumbnailImage,
-                $configThumbnail['alias']
-            );
-            $thumbnailMediaResource->mediaResource()->associate($mediaResource);
-            $thumbnailMediaResource->save();
-
-            $this->compress($thumbnailMediaResource);
-        }
-
-        return $mediaResource;
-    }
-
-    private function readConfig(string $configKey): void
-    {
-        $config = config("media_resources.{$configKey}");
-        $this->configSize = $config['size'];
-        $this->configThumbnails = $config['thumbnails'];
-        $this->configCompress = $config['compress'];
-        $this->configFormat = $config['format'];
-    }
-
-    private function createInterventionImage(
-        $path,
-        ?int $width,
-        ?int $height
-    ): Image {
-        $image = $this->resizeImage(
-            ImageManagerStatic::make($path),
-            $width,
-            $height
-        );
-
-        if ($this->configFormat === "jpg") {
-            $image = ImageManagerStatic::canvas(
-                $image->width(),
-                $image->height(),
-                '#ffffff'
-            )->insert($image);
-        }
-
-        return $image->encode($this->configFormat, 100);
-    }
-
-    private function resizeImage(Image $image, ?int $width, ?int $height): Image
-    {
-        if ($width != null && $height != null) {
-            $image->fit($width, $height);
-        } elseif ($width != null && $height == null) {
-            $image->resize($width, null, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-        } elseif ($width == null && $height != null) {
-            $image->resize(null, $height, function ($constraint) {
-                $constraint->aspectRatio();
-            });
-        }
-        return $image;
-    }
-
-    private function createMediaResource(
-        string $fileName,
-        Image $image,
-        ?string $alias
-    ): MediaResource {
-        $fullFileName = "{$fileName}.{$this->configFormat}";
-        $url = Storage::url($fullFileName);
-
-        $size = filesize(Storage::path($fullFileName));
-
-        return new MediaResource([
+        return MediaResource::create([
             'file_name' => $fileName,
-            'file_type' => 'image',
-            'file_size' => $size,
+            'file_type' => 'video',
+            'file_size' => $fileSize,
+            'file_extension' => $fileExtension,
             'url' => $url,
-            'extension' => $this->configFormat,
-            'width' => $image->width(),
-            'height' => $image->height(),
-            'alias' => $alias,
+            'width' => $width,
+            'height' => $height,
         ]);
-    }
-
-    private function save(string $fileName, Image $image): void
-    {
-        $path = "{$fileName}.{$this->configFormat}";
-        Storage::put($path, $image);
-    }
-
-    private function compress(MediaResource $mediaResource): void
-    {
-        if ($this->configCompress) {
-            ProcessMediaResource::dispatch($mediaResource);
-        }
     }
 }

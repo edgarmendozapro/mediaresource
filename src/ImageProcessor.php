@@ -14,7 +14,7 @@ class ImageProcessor
             return;
         }
 
-        $path = Storage::path("{$mediaResource->file_name}.{$mediaResource->extension}");
+        $path = Storage::path("{$mediaResource->file_name}.{$mediaResource->file_extension}");
         \Tinify\setKey($tinyKey);
         \Tinify\fromFile($path)->toFile($path);
         $mediaResource->is_compressed = true;

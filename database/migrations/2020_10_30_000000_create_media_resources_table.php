@@ -22,8 +22,8 @@ class CreateMediaResourcesTable extends Migration
             $table->string('file_name');
             $table->string('file_type');
             $table->integer('file_size')->unsigned();
+            $table->string('file_extension');
             $table->string('url')->unique();
-            $table->string('extension');
             $table->smallInteger('width')->unsigned();
             $table->smallInteger('height')->unsigned();
             $table->smallInteger('duration')->unsigned()->nullable();
